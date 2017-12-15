@@ -1,0 +1,208 @@
+<?php
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ *
+ * Implements hook_menu().
+ */
+
+module_load_include('inc', 'simple_api', 'simple_api');
+
+function simple_api_menu() {
+
+    $items = array();       
+    $items['api/load'] = array(
+        'page callback' => "mig_load_item",
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    $items['api/load_list'] = array(
+        'page callback' => "load_list_entity",
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function mig_load_item(){
+    $parameters = drupal_get_query_parameters();
+    $mig = new \Drupal\simple_api\MigClass(); 
+    if(isset($parameters['hash'])&&$parameters['hash']==variable_get('simple_api_hash')){}
+    else{
+        $mig->json_break_list("Hash security is not exits or not correct");        
+    }
+    $node=[];
+    $entity_type_list =$mig->entity_type_list();
+    if(!in_array($parameters['entity_type'],$entity_type_list)){
+        $mig->json_break_list("entity_type accept only ".implode(",", $entity_type_list));        
+    }
+    if(isset($parameters['entity_type']) && isset($parameters['id'])){
+        $entity_type = $parameters['entity_type'] ;
+        switch ($entity_type)
+        {
+            case "node":
+                $node = $mig->item_loader(node_load($parameters['id'])); 
+               break;
+            case "taxonomy_term":
+                $node = $mig->item_loader(taxonomy_term_load($parameters['id']));
+                break;
+            case "user":
+                $node =  $mig->item_loader(user_load($parameters['id'], TRUE));
+            default:
+           // $node[] = 'Request Parameter Missing'   ;
+        }
+        if(!$node){
+        $mig->json_break_list("entity_type:".$entity_type.",id=".$parameters['id']." not exist");  
+        }    
+        $ouput = array(
+                    "data"=>$node,
+                    "settings"=>array(
+                        "entity_type"=>$parameters['entity_type']
+                    )   
+                ); 
+        if(isset($parameters['entity_name'])&&!in_array($parameters['entity_type'], array("user"))){
+            $ouput["settings"]["entity_name"]=$parameters['entity_name'];
+        }
+
+    }else{
+        $ouput = array(
+                    "data"=>$node,
+                    "settings"=>array(
+                        "message"=>"entity_type,id are required requests",
+                    )   
+                ); 
+    }
+    drupal_json_output($ouput);
+}
+//**
+// @param api/load_list?entity_type=node&entity_name=product&page=0&limit=100
+//**//
+function load_list_entity(){
+    $parameters = drupal_get_query_parameters();
+    $mig = new \Drupal\simple_api\MigClass();  
+  
+    if(isset($parameters['hash'])&&$parameters['hash']==variable_get('simple_api_hash')){}
+    else{
+        $mig->json_break_list("Hash security is not exits or not correct");        
+    }
+    $nids = array();
+    $ouput = array();
+        
+    $entity_type_list = $mig->entity_type_list();
+    if(!in_array($parameters['entity_type'],$entity_type_list)){
+        $mig->json_break_list("entity_type accept only node,taxonomy_term,user");        
+    }
+    if(isset($parameters['entity_type'])){
+        $entity_type = $parameters['entity_type'] ;
+        switch ($entity_type)
+        {
+            case "node":
+            if(isset($parameters['page'])&&is_numeric($parameters['page'])&&isset($parameters['entity_name'])){
+                    $node_type = $parameters['entity_name'];
+                    $node_type_list = (array_keys(node_type_get_types()));
+                    if(!in_array($parameters['entity_name'],$node_type_list)){
+                         $mig->json_break_list("Node Type not exist");   
+                    }
+                    $limit = 10;
+                    if(isset($parameters['limit'])&&is_numeric($parameters['limit'])){
+                        $limit = $parameters['limit'] ;
+                    }
+                  $offset = $parameters['page'] * $limit; 
+                  $result = db_query("SELECT nid  FROM   {node} where type='".$node_type."'  ORDER BY nid DESC LIMIT $limit OFFSET $offset ");
+                    if(!empty($result)){
+                        foreach ($result as $obj) {  //<-- change 2
+                            $nids[] = $obj->nid;
+                        }
+                  }
+        
+            }else{
+                 $mig->json_break_list("entity_type=Node required entity_name,page");   
+            }
+                       
+                break;
+            case "taxonomy_term":                                          
+                if(isset($parameters['entity_name'])){
+                     $vocabulary = $mig->get_vids();
+                     if(!in_array($parameters['entity_name'],$vocabulary)&& !in_array($parameters['entity_name'],array_keys($vocabulary))){
+                          $mig->json_break_list("Vocabulary should be in ".implode(",",$vocabulary));  
+                     }
+                     $vid = array_search($parameters['entity_name'],$vocabulary);
+       
+                  
+                    if(isset($parameters['page'])){
+                     
+                        if(isset($parameters['limit'])&&is_numeric($parameters['limit'])){
+                            $limit = $parameters['limit'] ;
+                        }else{$limit=10;}    
+                            
+                            $offset = $parameters['page'] * $limit;                                              
+                            $result = db_query("SELECT tid FROM   {taxonomy_term_data} where vid='".$vid."'  LIMIT $limit OFFSET $offset "); 
+                    }else{
+                       $result = db_query("SELECT tid FROM   {taxonomy_term_data} where vid='".$vid."'");              
+                    }                      
+                }else{
+                     $result = db_query("SELECT tid FROM   {taxonomy_term_data}   LIMIT $limit OFFSET $offset "); //<-- change 1
+                }
+               
+                if(!empty($result)){
+                    foreach ($result as $obj) {  //<-- change 2
+                        $nids[] = $obj->tid;
+                    }
+                }
+                break;
+            case "user":
+                if(!isset($parameters['page'])){
+                   $mig->json_break_list("entity_type = User required page ");  
+                }
+                $limit = 10;
+                if(isset($parameters['limit'])&&is_numeric($parameters['limit'])){
+                    $limit = $parameters['limit'] ;
+                }
+                $offset = $parameters['page'] * $limit;
+      
+                $result = db_query("SELECT uid FROM   {users}  LIMIT $limit OFFSET $offset"); //<-- change 1
+                if(!empty($result)){
+                    foreach ($result as $obj) {  //<-- change 2
+                        $nids[] = $obj->uid;
+                    }
+                }
+                break;
+            default:
+              //  $nids['error'] = 'Request Parameter Missing'   ;
+        }
+        $ouput = array(
+                    "data"=>$nids,
+                    "settings"=>array(
+                        "entity_type"=>$parameters['entity_type']
+                    )   
+                );   
+        if(isset($parameters['page'])){
+            $ouput["settings"]["page"]=$parameters['page'];
+        }
+        if(isset($parameters['entity_name'])&&!in_array($parameters['entity_type'], array("user"))){
+            $ouput["settings"]["entity_name"]=$parameters['entity_name'];
+        }
+        if(empty($nids)){
+            $ouput["settings"]["message"]="your page are overflow or empty";
+        }
+        if(isset($parameters['limit'])&&is_numeric($parameters['limit'])){
+             $ouput["settings"]["limit"] = $parameters['limit'] ;
+        }else{
+             $ouput["settings"]["limit"] = 10 ;
+        }
+       
+        
+    }else{
+        $ouput = array(
+                    "data"=>$nids,
+                    "settings"=>array(
+                        "message"=>"entity_type,entity_name are required requests",
+                    )   
+                ); 
+    }
+    drupal_json_output($ouput);
+
+}
+

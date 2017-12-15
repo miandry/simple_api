@@ -1,0 +1,6 @@
+name = "Simple - Api Module"
+description = "Simple Api using for Migration"
+version = "7.x.1.0"
+core = "7.x"
+dependencies[] = field_collection
+

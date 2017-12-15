@@ -1,0 +1,12 @@
+<?php
+
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+function  simple_api_install() {  
+   if(!variable_get("simple_api_hash")){
+         variable_set("simple_api_hash","000000000");
+   }
+}
