@@ -18,7 +18,7 @@ There are three main parameters :
 * id - can take value of nid,uid,tid depend on entity_type
 * hash - hash security find in setting.php (section 1 before)
 
-### 3.URL Request Example
+### 3.URL Request 
 There two urls available   
 * /api/load_list  - For getting list items , Required parameter are : entity_type,entity_name,page,hash .It's return id list , 
   For example for node entity_type is return nid list 
@@ -29,3 +29,32 @@ YOUR-DOMAIN-NAME/api/load_list?entity_type=YOUR_ENTITY_TYPE&entity_name=YOUR_ENT
 ```
 YOUR-DOMAIN-NAME/api/load?entity_type=YOUR_ENTITY_TYPE&id=120&hash=XXXXXXXX
 ```
+### 4.Full Example
+* List Request
+```
+/api/load_list?entity_type=node&entity_name=article&page=0&hash=XXXXXXXX
+/api/load_list?entity_type=taxonomy_term&entity_name=tags&page=0&hash=XXXXXXXX
+/api/load_list?entity_type=user&page=0&hash=XXXXXXXX
+```  
+* Details Request
+```
+/api/load?entity_type=node&id=1231&hash=XXXXXXXX
+/api/load?entity_type=taxonomy_term&id=31&hash=XXXXXXXX
+/api/load?entity_type=user&id=131&hash=XXXXXXXX
+```  
+### 4.Get Reponses
+
+* PhP code : 
+```  
+<?php 
+ $url_list = "http://localhost/api/load?entity_type=node&id=220&hash=UA-XXXXXXXX-Z";
+ $result = file_get_contents($url);
+ print_r(json_decode($result,true));
+?>
+``` 
+* Console Result :
+```
+ - $result['data']  content data exact same as node_Load($id) , taxonomy_load($id),user_load($id) function , but I add another variable for entity_refernce call "data_entity" and for image add variable "image_url"
+ - $result['settings']  settings infomation such as entity_type,entity_name,...
+ ``` 
+
