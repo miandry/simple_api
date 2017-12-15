@@ -1,5 +1,5 @@
 # Drupal 7 Simple API
-Drupal 7 Simple Api using For migration , it provide api to get List and Item of Node , User , Taxonomy
+Drupal 7 Simple Api using For migration or Another , it provide api to get List and Item of Node , User , Taxonomy
 ### 1. settings
 Add Hash security in /sites/default/setting.php
 ```
