@@ -53,8 +53,9 @@ YOUR-DOMAIN-NAME/api/load?entity_type=YOUR_ENTITY_TYPE&id=120&hash=XXXXXXXX
 ?>
 ``` 
 * Console Result :
- - $result['data']  content data exact same as node_Load($id) , taxonomy_load($id),user_load($id) function.
-   But I add another variable for entity_refernce call "data_entity" and for image add variable "image_url"
- - $result['settings']  settings infomation such as entity_type,entity_name,...
+  $result['data']  content data exact same as node_Load($id) , taxonomy_load($id),user_load($id) function.
+  But I add another variable for entity_refernce call "data_entity" and for image add variable "image_url"
+  
+  $result['settings']  settings infomation such as entity_type,entity_name,...
 
 
