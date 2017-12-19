@@ -40,18 +40,22 @@ class MigClass  {
               //field_collection
               if($field_type=="field_collection"){
                  foreach ($value[LANGUAGE_NONE] as $key_collection => $collection) { 
+                   $items[$key][LANGUAGE_NONE][$key_collection]['type']='field_collection';
                    $items[$key][LANGUAGE_NONE][$key_collection]["data_entity"] = field_collection_item_load($collection["value"]);
                  }              
               }
               //node reference
               if($field_type=="entityreference"){
                  foreach ($value[LANGUAGE_NONE] as $key_collection => $collection) { 
+                   $items[$key][LANGUAGE_NONE][$key_collection]['type']='entityreference';  
                    $items[$key][LANGUAGE_NONE][$key_collection]["data_entity"] = node_load($collection["target_id"]);
+                   $items[$key][LANGUAGE_NONE][$key_collection]["data_entity_user"] = user_load($collection["target_id"]);
                  } 
               }
               //taxonomy_term_reference 
               if($field_type=="taxonomy_term_reference"){
                  foreach ($value[LANGUAGE_NONE] as $key_collection => $collection) { 
+                   $items[$key][LANGUAGE_NONE][$key_collection]['type']='taxonomy_term_reference';    
                    $items[$key][LANGUAGE_NONE][$key_collection]["data_entity"] = taxonomy_term_load($collection["tid"]);
                  } 
               }
