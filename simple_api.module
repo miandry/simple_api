@@ -184,8 +184,9 @@ function load_list_entity(){
         if(isset($parameters['entity_name'])&&!in_array($parameters['entity_type'], array("user"))){
             $ouput["settings"]["entity_name"]=$parameters['entity_name'];
         }
-        if(empty($nids)){
-            $ouput["settings"]["message"]="your page are overflow or empty";
+        if(empty($nids)){           
+             $max = $mig->get_limit($parameters['entity_type'],$parameters['entity_name']);
+             $ouput["settings"]["message"]="your page are overflow or empty , max limit is ".$max;
         }
         if(isset($parameters['limit'])&&is_numeric($parameters['limit'])){
              $ouput["settings"]["limit"] = $parameters['limit'] ;
