@@ -83,5 +83,25 @@ class MigClass  {
             return null;
           }
     }
+    
+    function get_limit($entity_type,$entity_name) {
+         switch ($entity_type)
+        {
+            case "node":
+                $query = db_select('node', 'n'); 
+                $query->condition('n.type', $entity_name);
+                $query->fields('n', array('nid'));
+            case "taxonomy_term":
+                $query = db_select('taxonomy_term_data', 'n'); 
+                $query->condition('n.vid', $entity_name);
+                $query->fields('n', array('tid'));    
+            case "user":
+                $query = db_select('users', 'n');                
+                $query->fields('n', array('uid'));  
+        }
+        
+        $result = $query->execute()->fetchAll();       
+        return sizeof($result);
+    }
 } 
 
